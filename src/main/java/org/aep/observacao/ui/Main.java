@@ -58,6 +58,7 @@ public class Main {
             System.out.println("\n=== Seção Cliente ===");
             System.out.println("1. Cadastrar Solicitação");
             System.out.println("2. Consultar Minhas Solicitações");
+            System.out.println("3. Consultar Solicitação por Código");
             System.out.println("0. Voltar");
             System.out.print("Escolha > ");
             String input = scanner.nextLine();
@@ -74,6 +75,9 @@ public class Main {
                     break;
                 case 2:
                     consultarSolicitacoes();
+                    break;
+                case 3:
+                    consultarSolicitacaoPorCodigo();
                     break;
                 case 0:
                     return;
@@ -174,6 +178,27 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("Entrada inválida.");
         }
+    }
+
+    private static void consultarSolicitacaoPorCodigo() {
+        System.out.print("Informe o código/protocolo da solicitação > ");
+        String protocolo = scanner.nextLine().trim();
+
+        if (protocolo.isEmpty()) {
+            System.out.println("Protocolo não pode ser vazio.");
+            return;
+        }
+
+        Solicitacao solicitacao = servico.buscarPorProtocolo(protocolo);
+        if (solicitacao == null) {
+            System.out.println("Solicitação não encontrada para o código informado.");
+            return;
+        }
+
+        System.out.println("Detalhes da solicitação:");
+        System.out.println(solicitacao);
+        System.out.println("Histórico de status:");
+        servico.getHistorico(solicitacao.getId()).forEach(System.out::println);
     }
 
     private static void menuServidor() {
