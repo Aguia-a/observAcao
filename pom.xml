@@ -35,8 +35,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>21</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -44,7 +43,6 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <executable>C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot\bin\java.exe</executable>
                     <mainClass>org.aep.observacao.ui.Main</mainClass>
                 </configuration>
             </plugin>
