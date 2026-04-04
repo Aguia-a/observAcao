@@ -78,6 +78,8 @@ public class Solicitacao {
         String result = "Protocolo: " + protocolo + "\nCategoria: " + categoria + "\nDescricao: " + descricao + "\nLocalizacao: " + localizacao + "\nPrioridade: " + prioridade + "\nStatus: " + status + "\nData: " + dataCriacao + "\nAnonimo: " + anonimo;
         if (!anonimo && usuario != null) {
             result += "\nSolicitante: " + usuario.getNome();
+            result += "\nEmail: " + usuario.getEmail();
+            result += "\nTelefone: " + usuario.getTelefone();
         }
         return result;
     }
