@@ -144,6 +144,7 @@ public class Main {
             usuario = new Usuario(1, nome, email, telefone); // simples, sem gerenciamento de id
         }
 
+        mostrarAguardeOperacaoBanco();
         Solicitacao solicitacao = servico.criarSolicitacao(categoria, descricao, localizacao, prioridade, usuario, anonimo);
         System.out.println("Solicitação criada com protocolo: " + solicitacao.getProtocolo());
     }
@@ -334,12 +335,17 @@ public class Main {
         String responsavel = scanner.nextLine();
         System.out.print("Comentário > ");
         String comentario = scanner.nextLine();
+        mostrarAguardeOperacaoBanco();
         boolean sucesso = servico.atualizarStatus(sol.getId(), novoStatus, responsavel, comentario);
         if (sucesso) {
             System.out.println("Status atualizado.");
         } else {
             System.out.println("Erro ao atualizar.");
         }
+    }
+
+    private static void mostrarAguardeOperacaoBanco() {
+        System.out.println("Aguarde... processando e salvando no banco de dados.");
     }
 
     private static void verDetalhes() {
