@@ -37,6 +37,9 @@ public class Main {
                 case 1:
                     menuCliente();
                     break;
+                case 2:
+                    menuServidor();
+                    break;
                 case 0:
                     System.out.println("Saindo...");
                     return;
@@ -171,5 +174,159 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("Entrada inválida.");
         }
+    }
+
+    private static void menuServidor() {
+        while (true) {
+            System.out.println("\n=== Seção Servidor Público ===");
+            System.out.println("1. Listar Solicitações");
+            System.out.println("2. Atualizar Status");
+            System.out.println("3. Ver Detalhes de Solicitação");
+            System.out.println("0. Voltar");
+            System.out.print("Escolha > ");
+            String input = scanner.nextLine();
+            int opcao;
+            try {
+                opcao = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Opção inválida. Digite um número.");
+                continue;
+            }
+            switch (opcao) {
+                case 1:
+                    listarSolicitacoes();
+                    break;
+                case 2:
+                    atualizarStatus();
+                    break;
+                case 3:
+                    verDetalhes();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("Opção inválida.");
+            }
+        }
+    }
+
+    private static void listarSolicitacoes() {
+        System.out.println("Listar Solicitações");
+        System.out.println("1. Todas");
+        System.out.println("2. Por Prioridade");
+        System.out.println("3. Por Bairro");
+        System.out.println("4. Por Categoria");
+        System.out.print("Escolha > ");
+        String input = scanner.nextLine();
+        int filtro;
+        try {
+            filtro = Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida.");
+            return;
+        }
+        List<Solicitacao> lista = null;
+        switch (filtro) {
+            case 1:
+                lista = servico.listarSolicitacoes(null, null, null);
+                break;
+            case 2:
+                System.out.println("Prioridade: 1. Baixa, 2. Média, 3. Alta");
+                System.out.print("Escolha prioridade > ");
+                input = scanner.nextLine();
+                int prio;
+                try {
+                    prio = Integer.parseInt(input);
+                    if (prio < 1 || prio > 3) {
+                        System.out.println("Prioridade inválida.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Entrada inválida.");
+                    return;
+                }
+                lista = fila.getFilaPorPrioridade(Prioridade.values()[prio - 1]);
+                break;
+            case 3:
+                System.out.print("Bairro > ");
+                String bairro = scanner.nextLine();
+                lista = fila.getFilaPorBairro(bairro);
+                break;
+            case 4:
+                System.out.println("Categorias:");
+                for (int i = 0; i < categorias.size(); i++) {
+                    System.out.println((i + 1) + ". " + categorias.get(i));
+                }
+                System.out.print("Escolha categoria > ");
+                input = scanner.nextLine();
+                int cat;
+                try {
+                    cat = Integer.parseInt(input) - 1;
+                    if (cat < 0 || cat >= categorias.size()) {
+                        System.out.println("Categoria inválida.");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Entrada inválida.");
+                    return;
+                }
+                lista = fila.getFilaPorCategoria(categorias.get(cat));
+                break;
+            default:
+                System.out.println("Filtro inválido.");
+                return;
+        }
+        if (lista != null) {
+            lista.forEach(s -> System.out.println(s.getProtocolo() + " - " + s.getStatus()));
+        }
+    }
+
+    private static void atualizarStatus() {
+        System.out.print("Protocolo da solicitação > ");
+        String protocolo = scanner.nextLine();
+        Solicitacao sol = servico.buscarPorProtocolo(protocolo);
+        if (sol == null) {
+            System.out.println("Solicitação não encontrada.");
+            return;
+        }
+        System.out.println("Status atual: " + sol.getStatus());
+        System.out.println("Novo status: 1. Triagem, 2. Em Execução, 3. Resolvido, 4. Encerrado");
+        System.out.print("Escolha novo status > ");
+        String input = scanner.nextLine();
+        int statusIndex;
+        try {
+            statusIndex = Integer.parseInt(input);
+            if (statusIndex < 1 || statusIndex > 4) {
+                System.out.println("Status inválido.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida.");
+            return;
+        }
+        Status novoStatus = Status.values()[statusIndex]; // TRIAGEM is 1, etc.
+        System.out.print("Responsável > ");
+        String responsavel = scanner.nextLine();
+        System.out.print("Comentário > ");
+        String comentario = scanner.nextLine();
+        boolean sucesso = servico.atualizarStatus(sol.getId(), novoStatus, responsavel, comentario);
+        if (sucesso) {
+            System.out.println("Status atualizado.");
+        } else {
+            System.out.println("Erro ao atualizar.");
+        }
+    }
+
+    private static void verDetalhes() {
+        System.out.print("Protocolo da solicitação > ");
+        String protocolo = scanner.nextLine();
+        Solicitacao sol = servico.buscarPorProtocolo(protocolo);
+        if (sol == null) {
+            System.out.println("Solicitação não encontrada.");
+            return;
+        }
+        System.out.println(sol);
+        System.out.println("Histórico:");
+        servico.getHistorico(sol.getId()).forEach(System.out::println);
     }
 }
