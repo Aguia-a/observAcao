@@ -36,6 +36,8 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>21</release>
+                    <fork>true</fork>
+                    <executable>${java.home}/bin/javac</executable>
                 </configuration>
             </plugin>
             <plugin>
