@@ -38,6 +38,10 @@ build/
 ### Mac OS ###
 .DS_Store
 
-### Arquivos de Teste Maven ###
+### Maven Test Files ###
 apache*/
 maven*
+
+### H2 local database ###
+persistence/observacao-db*
+observacao-db*

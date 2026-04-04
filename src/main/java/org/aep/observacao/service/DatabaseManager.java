@@ -7,7 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseManager {
-    private static final String JDBC_URL = "jdbc:h2:./observacao-db;AUTO_SERVER=TRUE;DATABASE_TO_UPPER=false";
+    private static final String DB_DIRECTORY = "persistence";
+    private static final String JDBC_URL = "jdbc:h2:./" + DB_DIRECTORY + "/observacao-db;AUTO_SERVER=TRUE;DATABASE_TO_UPPER=false";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 
@@ -21,7 +22,7 @@ public class DatabaseManager {
     }
 
     private static void createDataDirectory() {
-        File dataFolder = new File(".");
+        File dataFolder = new File(DB_DIRECTORY);
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
