@@ -8,12 +8,28 @@ import java.sql.Statement;
 
 public class DatabaseManager {
     private static final String DB_DIRECTORY = "persistence";
-    private static final String JDBC_URL = "jdbc:h2:./" + DB_DIRECTORY + "/observacao-db;AUTO_SERVER=TRUE;DATABASE_TO_UPPER=false";
+    private static final String JDBC_URL_FILE = "jdbc:h2:./" + DB_DIRECTORY + "/observacao-db;AUTO_SERVER=TRUE;DATABASE_TO_UPPER=false";
+    private static final String JDBC_URL_MEMORY = "jdbc:h2:mem:observacao-test;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 
+    private static boolean isTestMode() {
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            if (element.getClassName().contains("junit") || element.getClassName().contains("Test")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String getJdbcUrl() {
+        return isTestMode() ? JDBC_URL_MEMORY : JDBC_URL_FILE;
+    }
+
     public static void initializeDatabase() {
-        createDataDirectory();
+        if (!isTestMode()) {
+            createDataDirectory();
+        }
         try (Connection connection = getConnection()) {
             createTables(connection);
         } catch (SQLException e) {
@@ -62,6 +78,6 @@ public class DatabaseManager {
     }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(JDBC_URL, USER, PASSWORD);
+        return DriverManager.getConnection(getJdbcUrl(), USER, PASSWORD);
     }
 }

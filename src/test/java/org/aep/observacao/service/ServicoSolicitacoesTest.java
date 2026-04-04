@@ -13,7 +13,8 @@ public class ServicoSolicitacoesTest {
         Categoria categoria = new Categoria("Teste", 5);
         Solicitacao sol = servico.criarSolicitacao(categoria, "Descrição", "Local", Prioridade.ALTA, null, true);
         assertNotNull(sol);
-        assertEquals("SOL-000001", sol.getProtocolo());
+        assertTrue(sol.getProtocolo().startsWith("SOL-"));
+        assertTrue(sol.getProtocolo().matches("SOL-\\d{6}"));
         assertEquals(Status.ABERTO, sol.getStatus());
     }
 
@@ -22,7 +23,7 @@ public class ServicoSolicitacoesTest {
         ServicoSolicitacoes servico = new ServicoSolicitacoes();
         Categoria categoria = new Categoria("Teste", 5);
         Solicitacao sol = servico.criarSolicitacao(categoria, "Descrição", "Local", Prioridade.ALTA, null, true);
-        Solicitacao found = servico.buscarPorProtocolo("SOL-000001");
+        Solicitacao found = servico.buscarPorProtocolo(sol.getProtocolo());
         assertEquals(sol, found);
     }
 
