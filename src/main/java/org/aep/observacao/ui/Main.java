@@ -150,29 +150,28 @@ public class Main {
     }
 
     private static void consultarSolicitacoes() {
-        // Para solicitações não anônimas, mostrar todas
-        List<Solicitacao> minhasSolicitacoes = servico.listarSolicitacoes(null, null, null).stream()
-                .filter(s -> !s.isAnonimo())
-                .collect(Collectors.toList());
-        if (minhasSolicitacoes.isEmpty()) {
-            System.out.println("Nenhuma solicitação encontrada. Para solicitações anônimas, use a seção de servidor ou lembre-se do protocolo.");
+        // Apresenta todas as solicitações disponíveis (a lógica de negócio fica no service)
+        List<Solicitacao> solicitacoes = servico.listarSolicitacoes(null, null, null);
+        if (solicitacoes.isEmpty()) {
+            System.out.println("Nenhuma solicitação encontrada.");
             return;
         }
-        System.out.println("Suas Solicitações:");
-        for (int i = 0; i < minhasSolicitacoes.size(); i++) {
-            Solicitacao s = minhasSolicitacoes.get(i);
-            System.out.println((i + 1) + ". Protocolo: " + s.getProtocolo() + " - Status: " + s.getStatus() + " - Categoria: " + s.getCategoria().getNome());
+        System.out.println("Solicitações:");
+        for (int i = 0; i < solicitacoes.size(); i++) {
+            Solicitacao s = solicitacoes.get(i);
+            String anon = s.isAnonimo() ? "(Anônimo) " : "";
+            System.out.println((i + 1) + ". " + anon + "Protocolo: " + s.getProtocolo() + " - Status: " + s.getStatus() + " - Categoria: " + s.getCategoria().getNome());
         }
         System.out.print("Escolha o número da solicitação para ver detalhes (ou 0 para voltar) > ");
         String input = scanner.nextLine();
         try {
             int escolha = Integer.parseInt(input);
             if (escolha == 0) return;
-            if (escolha < 1 || escolha > minhasSolicitacoes.size()) {
+            if (escolha < 1 || escolha > solicitacoes.size()) {
                 System.out.println("Escolha inválida.");
                 return;
             }
-            Solicitacao sol = minhasSolicitacoes.get(escolha - 1);
+            Solicitacao sol = solicitacoes.get(escolha - 1);
             System.out.println(sol);
             System.out.println("Histórico:");
             servico.getHistorico(sol.getId()).forEach(System.out::println);
