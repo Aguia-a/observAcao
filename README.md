@@ -17,13 +17,31 @@ Projeto da AEP referente ao 5o semestre do curso de Engenharia de Software da Un
 
 ## Como executar
 
+### Via Spring Boot
+
+```bash
+mvn spring-boot:run
+```
+
 ### Via IDE (Code | IDEA)
 
 Abra o arquivo em:
 
+`src/main/java/org/aep/observacao/ObservacaoApplication.java`
+
+Execute o arquivo pela IDE para subir a API REST.
+
+Se quiser usar a interface CLI antiga, ainda é possível executar:
+
 `src/main/java/org/aep/observacao/ui/Main.java`
 
-Execute o arquivo pela IDE
+## API REST
+
+- `POST /api/solicitacoes` para criar solicitação
+- `GET /api/solicitacoes` para listar e filtrar solicitações
+- `GET /api/solicitacoes/{protocolo}` para buscar por protocolo
+- `PATCH /api/solicitacoes/{id}/status` para atualizar status
+- `GET /api/solicitacoes/{id}/historico` para consultar histórico
 
 > [!NOTE]
 > **Sobre a execução**
