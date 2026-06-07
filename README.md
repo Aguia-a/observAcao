@@ -6,7 +6,6 @@ Projeto da AEP referente ao 5o semestre do curso de Engenharia de Software da Un
 
 > [!WARNING]
 > **Requisitos obrigatórios**
-> 
 > _*_ indica um requisito obrigatório.
 
 - **Java JDK 21** *
@@ -43,16 +42,24 @@ Se quiser usar a interface CLI antiga, ainda é possível executar:
 - `PATCH /api/solicitacoes/{id}/status` para atualizar status
 - `GET /api/solicitacoes/{id}/historico` para consultar histórico
 
+## Documentação OpenAPI (Swagger)
+
+Após subir a aplicação, a interface do Swagger UI estará disponível em:
+
+- `http://localhost:8080/swagger-ui/index.html`
+
+E a especificação OpenAPI em JSON em:
+
+- `http://localhost:8080/v3/api-docs`
+
 > [!NOTE]
 > **Sobre a execução**
-> 
 > Pode demorar alguns segundos para a execução, pois a IDE irá fazer o download das dependências e depois fazer a build do projeto.
 
 ### Via terminal
 
 > [!IMPORTANT]
 > **Maven obrigatório**
-> 
 > Para a execução via terminal é obrigatório a instalação ou os binários do Maven.
 
 ```bash
