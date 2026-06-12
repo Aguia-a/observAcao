@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultar Chamado - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <a href="cidadao.html" class="back-btn">&#8592; Voltar</a>
+    <h1>Consultar Chamado</h1>
+
+    <div class="search-row">
+      <label>Protocolo:</label>
+      <input type="text" id="f-protocolo" placeholder="Ex: SOL-123456" autocomplete="off">
+    </div>
+    <button class="btn" id="btn-buscar" onclick="buscar()">Buscar &#128269;</button>
+
+    <div id="result-area"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  document.getElementById('f-protocolo').addEventListener('keydown', e => {
+    if (e.key === 'Enter') buscar();
+  });
+
+  async function buscar() {
+    const prot = document.getElementById('f-protocolo').value.trim();
+    const area = document.getElementById('result-area');
+
+    if (!prot) { area.innerHTML = '<div class="error-msg">Informe o protocolo.</div>'; return; }
+
+    area.innerHTML = '<div class="loading-msg">Buscando...</div>';
+
+    try {
+      const c = await buscarPorProtocolo(prot);
+      area.innerHTML = `
+        <div class="result-box">
+          <div class="rf"><span class="rl">Protocolo:</span> ${c.protocolo || '–'}</div>
+          <div class="rf"><span class="rl">Categoria:</span> ${c.categoria || '–'}</div>
+          <div class="rf"><span class="rl">Localização:</span> ${c.localizacao || '–'}</div>
+          <div class="rf"><span class="rl">Prioridade:</span> ${c.prioridade || '–'}</div>
+          <div class="rf"><span class="rl">Descrição:</span> ${c.descricao || '–'}</div>
+          <div class="rf"><span class="rl">Status:</span> <strong>${fmtStatus(c.status)}</strong></div>
+          <div class="rf"><span class="rl">Aberto em:</span> ${fmtDate(c.dataCriacao)}</div>
+        </div>`;
+    } catch (err) {
+      area.innerHTML = `<div class="error-msg">Chamado não encontrado. (${err.message})</div>`;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Chamados - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="top-bar">
+      <a href="index.html" class="sair-btn">Sair</a>
+    </div>
+    <h1>Consultar Chamados</h1>
+
+    <!-- Filtro por texto (client-side) -->
+    <div class="search-row">
+      <label>Buscar:</label>
+      <input type="text" id="f-busca" placeholder="Protocolo, categoria ou status..."
+             oninput="filtrar(this.value)">
+    </div>
+
+    <div id="list-area">
+      <div class="loading-msg">Carregando...</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  let todosChamados = [];
+
+  function renderTabela(lista) {
+    const area = document.getElementById('list-area');
+
+    if (!lista.length) {
+      area.innerHTML = '<div class="empty-msg">Nenhum chamado encontrado.</div>';
+      return;
+    }
+
+    const linhas = lista.map(c => `
+      <tr class="clickable" onclick="window.location.href='detalhes.html?protocolo=${encodeURIComponent(c.protocolo)}'">
+        <td>${c.protocolo || '–'}</td>
+        <td>${trunc(c.descricao, 60) || '–'}</td>
+        <td><span class="badge">${fmtStatus(c.status)}</span></td>
+      </tr>`).join('');
+
+    area.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Código &#9660;</th>
+          <th>Descrição &#9660;</th>
+          <th>Status &#9660;</th>
+        </tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  }
+
+  function filtrar(term) {
+    const t = term.toLowerCase();
+    const filtrado = t
+      ? todosChamados.filter(c =>
+          (c.protocolo   || '').toLowerCase().includes(t) ||
+          (c.categoria   || '').toLowerCase().includes(t) ||
+          (c.localizacao || '').toLowerCase().includes(t) ||
+          (c.descricao   || '').toLowerCase().includes(t) ||
+          (c.status      || '').toLowerCase().includes(t))
+      : todosChamados;
+    renderTabela(filtrado);
+  }
+
+  async function carregar() {
+    try {
+      todosChamados = await listarSolicitacoes();
+      renderTabela(todosChamados);
+    } catch (err) {
+      document.getElementById('list-area').innerHTML =
+        `<div class="error-msg">Erro ao carregar: ${err.message}</div>`;
+    }
+  }
+
+  carregar();
+</script>
+</body>
+</html>

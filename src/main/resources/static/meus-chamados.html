@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Chamados - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <a href="cidadao.html" class="back-btn">&#8592; Voltar</a>
+    <h1>Meus Chamados</h1>
+
+    <!-- Formulário de busca por e-mail -->
+    <div id="form-area">
+      <p style="font-size:12px;color:#555;margin-bottom:16px;text-align:center;">
+        Informe o e-mail usado ao abrir os chamados.
+      </p>
+      <div class="search-row">
+        <label>E-mail:</label>
+        <input type="email" id="f-email" placeholder="seu@email.com" autocomplete="off">
+      </div>
+      <button class="btn" id="btn-buscar" onclick="buscar()">Buscar &#128269;</button>
+      <div class="error-msg" id="form-error"></div>
+    </div>
+
+    <!-- Resultados (oculto até busca) -->
+    <div id="result-area" style="display:none;"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  document.getElementById('f-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') buscar();
+  });
+
+  async function buscar() {
+    const email = document.getElementById('f-email').value.trim().toLowerCase();
+    const errEl = document.getElementById('form-error');
+
+    if (!email) { errEl.textContent = 'Informe o e-mail.'; return; }
+
+    errEl.textContent = '';
+    const resultArea = document.getElementById('result-area');
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = '<div class="loading-msg">Carregando...</div>';
+
+    try {
+      const todos = await listarSolicitacoes();
+      const meus  = (todos || []).filter(c => !c.anonimo && c.usuario?.email?.toLowerCase() === email);
+
+      let html = `<p style="font-size:11px;color:#666;margin-bottom:14px;">
+        E-mail: <strong>${email}</strong>
+        &nbsp;<a onclick="trocar()" style="font-size:10px;text-decoration:underline;cursor:pointer;">Trocar</a>
+      </p>`;
+
+      if (!meus.length) {
+        html += '<div class="empty-msg">Nenhum chamado encontrado para este e-mail.</div>';
+      } else {
+        html += `<table>
+          <thead><tr>
+            <th>Protocolo</th><th>Categoria</th><th>Localização</th><th>Status</th>
+          </tr></thead>
+          <tbody>${meus.map(c => `
+            <tr>
+              <td>${c.protocolo || '–'}</td>
+              <td>${c.categoria || '–'}</td>
+              <td>${c.localizacao || '–'}</td>
+              <td><span class="badge">${fmtStatus(c.status)}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+
+      document.getElementById('form-area').style.display = 'none';
+      resultArea.innerHTML = html;
+    } catch (err) {
+      resultArea.innerHTML = `<div class="error-msg">Erro ao buscar: ${err.message}</div>`;
+    }
+  }
+
+  function trocar() {
+    document.getElementById('form-area').style.display  = 'block';
+    document.getElementById('result-area').style.display = 'none';
+    document.getElementById('result-area').innerHTML     = '';
+    document.getElementById('f-email').value             = '';
+    document.getElementById('f-email').focus();
+  }
+</script>
+</body>
+</html>

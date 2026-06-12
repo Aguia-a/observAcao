@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Chamados - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <a href="servidor.html" class="back-btn">&#8592; Voltar</a>
+    <h1>Histórico de Chamados</h1>
+
+    <div id="list-area">
+      <div class="loading-msg">Carregando...</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  async function carregar() {
+    const area = document.getElementById('list-area');
+
+    try {
+      const todos      = await listarSolicitacoes();
+      const concluidos = (todos || []).filter(c => c.status === 'RESOLVIDO' || c.status === 'ENCERRADO');
+
+      if (!concluidos.length) {
+        area.innerHTML = '<div class="empty-msg">Nenhum chamado concluído encontrado.</div>';
+        return;
+      }
+
+      /* busca a última entrada do histórico de cada chamado concluído em paralelo */
+      const ultimasEntradas = await Promise.all(
+        concluidos.map(c =>
+          buscarHistorico(c.id)
+            .then(hist => {
+              const ultimo = Array.isArray(hist) && hist.length ? hist[hist.length - 1] : null;
+              return { protocolo: c.protocolo, data: ultimo?.data ?? c.dataCriacao, responsavel: ultimo?.responsavel ?? '–', comentario: ultimo?.comentario ?? '–' };
+            })
+            .catch(() => ({ protocolo: c.protocolo, data: c.dataCriacao, responsavel: '–', comentario: '–' }))
+        )
+      );
+
+      const linhas = ultimasEntradas.map(h => `
+        <tr>
+          <td>${h.protocolo || '–'}</td>
+          <td>${fmtDate(h.data)}</td>
+          <td>${h.responsavel}</td>
+          <td>${h.comentario}</td>
+        </tr>`).join('');
+
+      area.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Protocolo</th>
+            <th>Data e Hora da Conclusão</th>
+            <th>Nome do Servidor</th>
+            <th>Comentário do Servidor</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>`;
+
+    } catch (err) {
+      area.innerHTML = `<div class="error-msg">Erro ao carregar histórico: ${err.message}</div>`;
+    }
+  }
+
+  carregar();
+</script>
+</body>
+</html>

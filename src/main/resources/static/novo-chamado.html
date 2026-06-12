@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Chamado - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <a href="cidadao.html" class="back-btn">&#8592; Voltar</a>
+    <h1>Novo Chamado</h1>
+
+    <div class="form-row">
+      <label for="f-categoria">Categoria:</label>
+      <select id="f-categoria">
+        <option value="">Selecionar ▼</option>
+        <option value="Iluminação|7">Iluminação Pública</option>
+        <option value="Buraco|5">Buraco / Pavimentação</option>
+        <option value="Limpeza|3">Limpeza e Coleta</option>
+        <option value="Saúde|1">Saúde Pública</option>
+        <option value="Segurança Escolar|2">Segurança Escolar</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="f-localizacao">Localização:</label>
+      <input type="text" id="f-localizacao" placeholder="Endereço ou bairro">
+    </div>
+    <div class="form-row">
+      <label for="f-prioridade">Prioridade:</label>
+      <select id="f-prioridade">
+        <option value="">Selecionar ▼</option>
+        <option value="BAIXA">Baixa</option>
+        <option value="MEDIA">Média</option>
+        <option value="ALTA">Alta</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="f-descricao">Descrição:</label>
+      <textarea id="f-descricao" placeholder="Descreva o problema detalhadamente"></textarea>
+    </div>
+
+    <hr class="section-sep">
+    <div class="section-label">Identificação</div>
+
+    <div class="check-row">
+      <input type="checkbox" id="f-anonimo">
+      <label for="f-anonimo" style="text-transform:none;font-size:12px;">Enviar como anônimo</label>
+    </div>
+
+    <div id="usuario-fields">
+      <div class="form-row">
+        <label for="f-nome">Nome:</label>
+        <input type="text" id="f-nome" placeholder="Seu nome completo">
+      </div>
+      <div class="form-row">
+        <label for="f-email">E-mail:</label>
+        <input type="email" id="f-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-row">
+        <label for="f-telefone">Telefone:</label>
+        <input type="tel" id="f-telefone" placeholder="(00) 00000-0000">
+      </div>
+    </div>
+
+    <div class="error-msg" id="form-error"></div>
+    <div class="form-actions">
+      <a href="cidadao.html" class="btn btn-sm">Cancelar</a>
+      <button class="btn btn-sm" id="btn-enviar" onclick="enviar()">Enviar</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  document.getElementById('f-anonimo').addEventListener('change', function () {
+    document.getElementById('usuario-fields').style.display = this.checked ? 'none' : 'block';
+  });
+
+  async function enviar() {
+    const catRaw      = document.getElementById('f-categoria').value;
+    const localizacao = document.getElementById('f-localizacao').value.trim();
+    const prioridade  = document.getElementById('f-prioridade').value;
+    const descricao   = document.getElementById('f-descricao').value.trim();
+    const anonimo     = document.getElementById('f-anonimo').checked;
+    const errEl       = document.getElementById('form-error');
+
+    if (!catRaw || !localizacao || !prioridade || !descricao) {
+      errEl.textContent = 'Preencha todos os campos obrigatórios.';
+      return;
+    }
+
+    const [categoriaNome, slaDiasStr] = catRaw.split('|');
+    const categoriaSlaDias = parseInt(slaDiasStr, 10) || 7;
+
+    const dados = { categoriaNome, categoriaSlaDias, localizacao, prioridade, descricao, anonimo };
+
+    if (!anonimo) {
+      const nome  = document.getElementById('f-nome').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      if (!nome || !email) {
+        errEl.textContent = 'Preencha nome e e-mail, ou marque "Enviar como anônimo".';
+        return;
+      }
+      /* id: 0 - campo int obrigatório no UsuarioRequest do backend */
+      dados.usuario = { id: 0, nome, email, telefone: document.getElementById('f-telefone').value.trim() || '' };
+    }
+
+    errEl.textContent = '';
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const res = await criarSolicitacao(dados);
+      showToast(`Chamado aberto! Protocolo: ${res?.protocolo || '?'}`);
+      setTimeout(() => { window.location.href = 'cidadao.html'; }, 2000);
+    } catch (err) {
+      errEl.textContent = 'Erro ao enviar: ' + err.message;
+      btn.disabled = false;
+      btn.textContent = 'Enviar';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Chamado - ObservAção</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="card" id="main-card">
+    <a href="painel.html" class="back-btn">&#8592; Voltar</a>
+    <div id="content-area">
+      <div class="loading-msg">Carregando...</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script>
+  let solicitacaoId = null;
+
+  function renderDetalhes(c, hist) {
+    const anonInfo = c.anonimo || !c.usuario
+      ? `<div class="detail-line" style="color:#888;font-size:11px;margin-top:8px;">
+           &#128100; Chamado anônimo - dados do solicitante não disponíveis.
+         </div>`
+      : `<hr class="divider">
+         <div class="section-label">Dados do Solicitante</div>
+         <div class="detail-line"><span class="detail-lbl">Nome:</span>&nbsp;${c.usuario.nome || '–'}</div>
+         <div class="detail-line"><span class="detail-lbl">E-mail:</span>&nbsp;${c.usuario.email || '–'}</div>
+         <div class="detail-line"><span class="detail-lbl">Telefone:</span>&nbsp;${c.usuario.telefone || '–'}</div>`;
+
+    const histHtml = !hist.length
+      ? '<div class="empty-msg">Nenhuma atualização registrada.</div>'
+      : hist.map(h => `
+          <div class="hist-entry">
+            <span class="hist-status">${fmtStatus(h.status)}</span>
+            <div class="hist-meta">${fmtDate(h.data)} &mdash; ${h.responsavel || '–'}</div>
+            ${h.comentario ? `<div class="hist-comment">${h.comentario}</div>` : ''}
+          </div>`).join('');
+
+    document.getElementById('content-area').innerHTML = `
+      <h1>Detalhes do Chamado ${c.protocolo || ''}</h1>
+
+      <div class="detail-line">
+        <span class="detail-lbl">Status:</span>
+        <span class="detail-ul">&nbsp;${fmtStatus(c.status)}</span>
+      </div>
+      <div class="detail-cols">
+        <div class="detail-line"><span class="detail-lbl">Localização:</span>&nbsp;${c.localizacao || '–'}</div>
+        <div class="detail-line"><span class="detail-lbl">Prioridade:</span>&nbsp;${c.prioridade || '–'}</div>
+      </div>
+      <div class="detail-line"><span class="detail-lbl">Categoria:</span>&nbsp;${c.categoria || '–'}</div>
+      <div class="detail-line"><span class="detail-lbl">Descrição:</span>&nbsp;${c.descricao || '–'}</div>
+
+      ${anonInfo}
+
+      <hr class="divider">
+      <div class="section-label">Histórico de Atualizações</div>
+      ${histHtml}
+
+      <hr class="divider">
+      <div class="section-label">Registrar Atualização</div>
+
+      <div class="form-row">
+        <label for="f-status">Novo status:</label>
+        <select id="f-status">
+          <option value="">Selecionar ▼</option>
+          <option value="ABERTO">Aberto</option>
+          <option value="TRIAGEM">Triagem</option>
+          <option value="EM_EXECUCAO">Em Execução</option>
+          <option value="RESOLVIDO">Resolvido</option>
+          <option value="ENCERRADO">Encerrado</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="f-responsavel">Responsável:</label>
+        <input type="text" id="f-responsavel" placeholder="Nome do servidor responsável">
+      </div>
+      <div class="form-row">
+        <label for="f-comentario">Comentário:</label>
+        <input type="text" id="f-comentario" placeholder="Observações sobre o atendimento">
+      </div>
+
+      <div class="error-msg" id="update-error"></div>
+      <div class="form-actions">
+        <button class="btn btn-sm" id="btn-atualizar" onclick="atualizar()">Atualizar Chamado</button>
+      </div>`;
+  }
+
+  async function atualizar() {
+    const status      = document.getElementById('f-status')?.value;
+    const responsavel = document.getElementById('f-responsavel')?.value.trim();
+    const comentario  = document.getElementById('f-comentario')?.value.trim();
+    const errEl       = document.getElementById('update-error');
+
+    if (!status || !responsavel || !comentario) {
+      errEl.textContent = 'Preencha novo status, responsável e comentário.';
+      return;
+    }
+    errEl.textContent = '';
+
+    try {
+      /* id é int no controller - solicitacaoId é número vindo do JSON */
+      await atualizarStatus(solicitacaoId, { status, responsavel, comentario });
+      showToast(`Chamado atualizado para ${fmtStatus(status)}!`);
+      setTimeout(() => { window.location.href = 'painel.html'; }, 1800);
+    } catch (err) {
+      errEl.textContent = 'Erro: ' + err.message;
+    }
+  }
+
+  async function carregar() {
+    const protocolo = getParam('protocolo');
+    if (!protocolo) {
+      document.getElementById('content-area').innerHTML =
+        '<div class="error-msg">Protocolo não informado. Volte ao painel.</div>';
+      return;
+    }
+
+    try {
+      const sol  = await buscarPorProtocolo(protocolo);
+      const hist = await buscarHistorico(sol.id).catch(() => []);
+      solicitacaoId = sol.id;
+      renderDetalhes(sol, hist);
+    } catch (err) {
+      document.getElementById('content-area').innerHTML =
+        `<div class="error-msg">Erro ao carregar chamado: ${err.message}</div>`;
+    }
+  }
+
+  carregar();
+</script>
+</body>
+</html>
