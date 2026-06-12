@@ -1,92 +1,334 @@
 # ObservAção
+Sistema de abertura e acompanhamento de solicitações de serviços públicos.  
+Projeto da AEP - 5º semestre de Engenharia de Software, UniCesumar.
 
-Projeto da AEP referente ao 5o semestre do curso de Engenharia de Software da UniCesumar.
+## Stack
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | Java 21 · Spring Boot 3.4.5 |
+| Persistência | H2 (arquivo, pasta `persistence/`) |
+| Frontend | HTML · CSS · JavaScript (sem frameworks) |
+| Documentação | SpringDoc OpenAPI 3 (Swagger UI) |
+
+---
 
 ## Pré-requisitos
 
 > [!WARNING]
 > **Requisitos obrigatórios**
-> _*_ indica um requisito obrigatório.
 
-- **Java JDK 21** *
-  - Preferencialmente a JDK 21 Temurin (Da qual foi feita o projeto)
-  - Configure a variável de ambiente `JAVA_HOME` apontando para a instalação JDK 21
-  - Ou certifique-se de que o comando `java` na linha de comando seja do JDK 21
-- **Apache Maven 3.9.6**
+- **Java JDK 21** - preferencialmente Temurin 21. Configure `JAVA_HOME` ou certifique-se de que `java` na linha de comando aponte para o JDK 21.
+- **Apache Maven 3.9.6+**
+
+---
 
 ## Como executar
 
-### Via Spring Boot
+### Via Maven (terminal)
 
 ```bash
+# Compilar e executar
 mvn spring-boot:run
+
+# Apenas compilar
+mvn clean compile
+
+# Executar testes
+mvn test
 ```
 
-### Via IDE (Code | IDEA)
+### Via IDE (VS Code / IntelliJ)
 
-Abra o arquivo em:
+Abra e execute:
 
-`src/main/java/org/aep/observacao/ObservacaoApplication.java`
+```
+src/main/java/org/aep/observacao/ObservacaoApplication.java
+```
 
-Execute o arquivo pela IDE para subir a API REST.
+A aplicação sobe em **`http://localhost:8080`**.
 
-Se quiser usar a interface CLI antiga, ainda é possível executar:
+> [!NOTE]
+> Na primeira execução a IDE fará download das dependências Maven. Pode demorar alguns minutos.
 
-`src/main/java/org/aep/observacao/ui/Main.java`
+### Interface CLI (legado)
+
+A interface de linha de comando original ainda está disponível:
+
+```
+src/main/java/org/aep/observacao/ui/Main.java
+```
+
+---
+
+## Interface Web
+
+Após subir a aplicação, acesse `http://localhost:8080/`.
+
+| Página | Arquivo | Descrição |
+|--------|---------|-----------|
+| Início | `index.html` | Seleção de perfil (Cidadão / Servidor) |
+| Área do Cidadão | `cidadao.html` | Menu do cidadão |
+| Novo Chamado | `novo-chamado.html` | Abertura de solicitação |
+| Consultar Chamado | `consultar.html` | Busca por protocolo + histórico de status |
+| Meus Chamados | `meus-chamados.html` | Lista de chamados do cidadão por e-mail |
+| Área do Servidor | `servidor.html` | Menu do servidor público |
+| Painel de Chamados | `painel.html` | Lista e filtragem de todas as solicitações |
+| Detalhes / Atualizar | `detalhes.html` | Detalhes completos + atualização de status |
+| Histórico | `historico.html` | Chamados concluídos (Resolvido / Encerrado) |
+
+---
 
 ## API REST
 
-- `POST /api/solicitacoes` para criar solicitação
-- `GET /api/solicitacoes` para listar e filtrar solicitações
-- `GET /api/solicitacoes/{protocolo}` para buscar por protocolo
-- `PATCH /api/solicitacoes/{id}/status` para atualizar status
-- `GET /api/solicitacoes/{id}/historico` para consultar histórico
+**Base URL:** `http://localhost:8080/api`
 
-## Documentação OpenAPI (Swagger)
+### Enumerações
 
-Após subir a aplicação, a interface do Swagger UI estará disponível em:
+| Tipo | Valores |
+|------|---------|
+| `Prioridade` | `BAIXA` · `MEDIA` · `ALTA` |
+| `Status` | `ABERTO` · `TRIAGEM` · `EM_EXECUCAO` · `RESOLVIDO` · `ENCERRADO` |
 
-- `http://localhost:8080/swagger-ui/index.html`
+### Categorias padrão
 
-E a especificação OpenAPI em JSON em:
+| Nome | SLA (dias) |
+|------|-----------|
+| Iluminação | 7 |
+| Buraco | 5 |
+| Limpeza | 3 |
+| Saúde | 1 |
+| Segurança Escolar | 2 |
 
-- `http://localhost:8080/v3/api-docs`
+---
 
-> [!NOTE]
-> **Sobre a execução**
-> Pode demorar alguns segundos para a execução, pois a IDE irá fazer o download das dependências e depois fazer a build do projeto.
+### `POST /api/solicitacoes`
 
-### Via terminal
+Cria uma nova solicitação.
 
-> [!IMPORTANT]
-> **Maven obrigatório**
-> Para a execução via terminal é obrigatório a instalação ou os binários do Maven.
+**Request body** (`application/json`):
 
-```bash
-# Compilar
-mvn clean compile
-
-# Testar
-mvn test
-
-# Executar
-mvn exec:java
+```json
+{
+  "categoriaNome": "Iluminação",
+  "categoriaSlaDias": 7,
+  "descricao": "Poste apagado na Rua das Flores",
+  "localizacao": "Jardim América",
+  "prioridade": "ALTA",
+  "anonimo": false,
+  "usuario": {
+    "nome": "João Silva",
+    "email": "joao@email.com",
+    "telefone": "(44) 99999-0000"
+  }
+}
 ```
 
-## Funcionalidades
+> Para envio anônimo, use `"anonimo": true` e omita ou envie `"usuario": null`.
 
-- **Cliente**: Cadastrar solicitações e consultar histórico
-- **Servidor Público**: Gerenciar status das solicitações
-- **Persistência**: Dados salvos em banco H2 (pasta `persistence/`)
+**Validações:**
+- `categoriaNome`, `descricao`, `localizacao` - obrigatórios e não-vazios
+- `categoriaSlaDias` - mínimo 1
+- `prioridade` - obrigatório; valor do enum `Prioridade`
+- Se `anonimo: false`, `usuario.nome`, `usuario.email` e `usuario.telefone` são obrigatórios
 
-## Estrutura do Projeto
+**Responses:**
 
-```text
+| Status | Descrição |
+|--------|-----------|
+| `201 Created` | Solicitação criada; retorna `SolicitacaoResponse` |
+| `400 Bad Request` | Corpo inválido ou campos obrigatórios ausentes |
+
+**Response body (`201`):**
+
+```json
+{
+  "id": 1,
+  "protocolo": "SOL-123456",
+  "categoria": "Iluminação",
+  "descricao": "Poste apagado na Rua das Flores",
+  "localizacao": "Jardim América",
+  "prioridade": "ALTA",
+  "status": "ABERTO",
+  "dataCriacao": "2026-06-11T10:30:00",
+  "anonimo": false,
+  "usuario": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "joao@email.com",
+    "telefone": "(44) 99999-0000"
+  }
+}
+```
+
+---
+
+### `GET /api/solicitacoes`
+
+Lista solicitações com filtros opcionais.
+
+**Query parameters (todos opcionais):**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `prioridade` | `Prioridade` | Filtra por prioridade (`BAIXA`, `MEDIA`, `ALTA`) |
+| `bairro` | `string` | Filtra por correspondência parcial na localização |
+| `categoriaNome` | `string` | Filtra por nome exato da categoria |
+
+**Exemplos:**
+
+```
+GET /api/solicitacoes
+GET /api/solicitacoes?prioridade=ALTA
+GET /api/solicitacoes?bairro=Jardim América
+GET /api/solicitacoes?categoriaNome=Iluminação
+GET /api/solicitacoes?prioridade=MEDIA&categoriaNome=Buraco
+```
+
+**Response `200 OK`:** array de `SolicitacaoResponse` (ver schema acima).
+
+---
+
+### `GET /api/solicitacoes/{protocolo}`
+
+Busca uma solicitação pelo número de protocolo.
+
+**Path parameter:**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `protocolo` | `string` | Ex: `SOL-123456` |
+
+**Responses:**
+
+| Status | Descrição |
+|--------|-----------|
+| `200 OK` | Retorna `SolicitacaoResponse` |
+| `404 Not Found` | Protocolo não encontrado |
+
+---
+
+### `GET /api/solicitacoes/{id}/historico`
+
+Retorna o histórico completo de atualizações de uma solicitação.
+
+**Path parameter:**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `id` | `int` | ID numérico da solicitação (presente em `SolicitacaoResponse.id`) |
+
+**Response `200 OK`:** array de `HistoricoStatusResponse`:
+
+```json
+[
+  {
+    "id": 1,
+    "solicitacaoId": 1,
+    "status": "TRIAGEM",
+    "data": "2026-06-11T11:00:00",
+    "responsavel": "Maria Servidora",
+    "comentario": "Solicitação recebida e em triagem."
+  }
+]
+```
+
+**Responses:**
+
+| Status | Descrição |
+|--------|-----------|
+| `200 OK` | Array de entradas do histórico (pode ser vazio `[]`) |
+
+---
+
+### `PATCH /api/solicitacoes/{id}/status`
+
+Registra uma atualização de status em uma solicitação.
+
+**Path parameter:**
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `id` | `int` | ID numérico da solicitação |
+
+**Request body** (`application/json`):
+
+```json
+{
+  "status": "EM_EXECUCAO",
+  "responsavel": "Carlos Técnico",
+  "comentario": "Equipe deslocada para o local."
+}
+```
+
+**Validações:**
+- `status` - obrigatório; valor do enum `Status`
+- `responsavel` - obrigatório e não-vazio
+- `comentario` - obrigatório e não-vazio
+
+**Responses:**
+
+| Status | Descrição |
+|--------|-----------|
+| `204 No Content` | Status atualizado com sucesso |
+| `400 Bad Request` | Corpo inválido |
+| `404 Not Found` | ID não encontrado |
+
+---
+
+## Documentação interativa (Swagger UI)
+
+Com a aplicação rodando, acesse:
+
+- **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+
+---
+
+## Estrutura do projeto
+
+```
 observAcao/
-├── src/main/java/org/aep/observacao/
-│   ├── ui/Main.java          # Interface CLI
-│   ├── service/              # Lógica de negócio
-│   └── model/                # Classes de domínio
-├── persistence/              # Banco H2
+├── src/
+│   └── main/
+│       ├── java/org/aep/observacao/
+│       │   ├── ObservacaoApplication.java      # Entry point Spring Boot
+│       │   ├── controller/
+│       │   │   ├── SolicitacaoController.java  # Endpoints REST
+│       │   │   └── dto/                        # Records de request/response
+│       │   ├── service/
+│       │   │   ├── ServicoSolicitacoes.java    # Lógica de negócio
+│       │   │   ├── FilaAtendimento.java        # Fila por prioridade/bairro/categoria
+│       │   │   └── DatabaseManager.java        # Inicialização do H2
+│       │   ├── repository/
+│       │   │   ├── SolicitacaoRepository.java  # Interface
+│       │   │   ├── JdbcSolicitacaoRepository.java
+│       │   │   ├── HistoricoStatusRepository.java
+│       │   │   └── JdbcHistoricoStatusRepository.java
+│       │   ├── model/                          # Entidades de domínio
+│       │   ├── config/
+│       │   │   └── OpenApiConfig.java          # Configuração Swagger
+│       │   └── ui/
+│       │       └── Main.java                   # Interface CLI (legado)
+│       └── resources/
+│           ├── application.properties
+│           └── static/                         # Frontend (servido em /)
+│               ├── css/style.css
+│               ├── js/
+│               │   ├── api.js                  # Camada de chamadas REST
+│               │   └── utils.js                # Utilitários (formato, toast, params)
+│               ├── index.html
+│               ├── cidadao.html
+│               ├── novo-chamado.html
+│               ├── consultar.html
+│               ├── meus-chamados.html
+│               ├── servidor.html
+│               ├── painel.html
+│               ├── detalhes.html
+│               └── historico.html
+└── persistence/                                # Arquivo do banco H2
+persistence/              # Banco H2
+└── .mvn/jvm.config           # Configuração Maven
+persistence/              # Banco H2
 └── .mvn/jvm.config           # Configuração Maven
 ```
