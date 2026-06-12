@@ -65,7 +65,7 @@
             <th>Protocolo</th><th>Categoria</th><th>Localização</th><th>Status</th>
           </tr></thead>
           <tbody>${meus.map(c => `
-            <tr>
+            <tr class="clickable" onclick="window.location.href='consultar.html?protocolo=${encodeURIComponent(c.protocolo)}'">
               <td>${c.protocolo || '–'}</td>
               <td>${c.categoria || '–'}</td>
               <td>${c.localizacao || '–'}</td>

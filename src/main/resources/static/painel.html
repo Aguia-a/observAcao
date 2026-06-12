@@ -14,11 +14,34 @@
     </div>
     <h1>Consultar Chamados</h1>
 
-    <!-- Filtro por texto (client-side) -->
+    <!-- Filtros (client-side) -->
+    <div class="search-row">
+      <label>Prioridade:</label>
+      <select id="f-prioridade" onchange="aplicarFiltros()">
+        <option value="">Todas</option>
+        <option value="BAIXA">Baixa</option>
+        <option value="MEDIA">Média</option>
+        <option value="ALTA">Alta</option>
+      </select>
+    </div>
+    <div class="search-row">
+      <label>Categoria:</label>
+      <select id="f-categoria" onchange="aplicarFiltros()">
+        <option value="">Todas</option>
+        <option value="Iluminação">Iluminação Pública</option>
+        <option value="Buraco">Buraco / Pavimentação</option>
+        <option value="Limpeza">Limpeza e Coleta</option>
+        <option value="Saúde">Saúde Pública</option>
+        <option value="Segurança Escolar">Segurança Escolar</option>
+      </select>
+    </div>
+    <div class="search-row">
+      <label>Bairro:</label>
+      <input type="text" id="f-bairro" placeholder="Nome do bairro..." oninput="aplicarFiltros()">
+    </div>
     <div class="search-row">
       <label>Buscar:</label>
-      <input type="text" id="f-busca" placeholder="Protocolo, categoria ou status..."
-             oninput="filtrar(this.value)">
+      <input type="text" id="f-busca" placeholder="Protocolo, descrição ou status..." oninput="aplicarFiltros()">
     </div>
 
     <div id="list-area">
@@ -58,16 +81,23 @@
       </table>`;
   }
 
-  function filtrar(term) {
-    const t = term.toLowerCase();
-    const filtrado = t
-      ? todosChamados.filter(c =>
-          (c.protocolo   || '').toLowerCase().includes(t) ||
-          (c.categoria   || '').toLowerCase().includes(t) ||
-          (c.localizacao || '').toLowerCase().includes(t) ||
-          (c.descricao   || '').toLowerCase().includes(t) ||
-          (c.status      || '').toLowerCase().includes(t))
-      : todosChamados;
+  function aplicarFiltros() {
+    const prioridade = document.getElementById('f-prioridade').value;
+    const categoria  = document.getElementById('f-categoria').value.toLowerCase();
+    const bairro     = document.getElementById('f-bairro').value.trim().toLowerCase();
+    const texto      = document.getElementById('f-busca').value.toLowerCase();
+
+    const filtrado = todosChamados.filter(c => {
+      if (prioridade && (c.prioridade || '').toUpperCase() !== prioridade) return false;
+      if (categoria  && (c.categoria  || '').toLowerCase() !== categoria)  return false;
+      if (bairro     && !(c.localizacao || '').toLowerCase().includes(bairro)) return false;
+      if (texto) {
+        const campos = (c.protocolo || '') + (c.categoria || '') + (c.localizacao || '') +
+                       (c.descricao || '') + (c.status || '');
+        if (!campos.toLowerCase().includes(texto)) return false;
+      }
+      return true;
+    });
     renderTabela(filtrado);
   }
 

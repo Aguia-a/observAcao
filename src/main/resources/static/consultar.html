@@ -38,7 +38,18 @@
     area.innerHTML = '<div class="loading-msg">Buscando...</div>';
 
     try {
-      const c = await buscarPorProtocolo(prot);
+      const c    = await buscarPorProtocolo(prot);
+      const hist = await buscarHistorico(c.id).catch(() => []);
+
+      const histHtml = !hist.length
+        ? '<div class="empty-msg">Nenhuma atualização registrada.</div>'
+        : hist.map(h => `
+            <div class="hist-entry">
+              <span class="hist-status">${fmtStatus(h.status)}</span>
+              <div class="hist-meta">${fmtDate(h.data)} &mdash; ${h.responsavel || '–'}</div>
+              ${h.comentario ? `<div class="hist-comment">${h.comentario}</div>` : ''}
+            </div>`).join('');
+
       area.innerHTML = `
         <div class="result-box">
           <div class="rf"><span class="rl">Protocolo:</span> ${c.protocolo || '–'}</div>
@@ -48,11 +59,22 @@
           <div class="rf"><span class="rl">Descrição:</span> ${c.descricao || '–'}</div>
           <div class="rf"><span class="rl">Status:</span> <strong>${fmtStatus(c.status)}</strong></div>
           <div class="rf"><span class="rl">Aberto em:</span> ${fmtDate(c.dataCriacao)}</div>
-        </div>`;
+        </div>
+        <hr class="divider">
+        <div class="section-label">Histórico de Atualizações</div>
+        ${histHtml}`;
     } catch (err) {
       area.innerHTML = `<div class="error-msg">Chamado não encontrado. (${err.message})</div>`;
     }
   }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const p = getParam('protocolo');
+    if (p) {
+      document.getElementById('f-protocolo').value = p;
+      buscar();
+    }
+  });
 </script>
 </body>
 </html>
